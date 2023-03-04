@@ -220,6 +220,7 @@ def main():
         cfg.model,
         train_cfg=cfg.get('train_cfg'),
         test_cfg=cfg.get('test_cfg'))
+
     model.init_weights()
 
     logger.info(f'Model:\n{model}')

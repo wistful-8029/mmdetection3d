@@ -202,18 +202,18 @@ class DynamicVFE(nn.Module):
         canvas = voxel_mean.new_zeros(canvas_len, dtype=torch.long)
         # Only include non-empty pillars
         indices = (
-            voxel_coors[:, 0] * canvas_z * canvas_y * canvas_x +
-            voxel_coors[:, 1] * canvas_y * canvas_x +
-            voxel_coors[:, 2] * canvas_x + voxel_coors[:, 3])
+                voxel_coors[:, 0] * canvas_z * canvas_y * canvas_x +
+                voxel_coors[:, 1] * canvas_y * canvas_x +
+                voxel_coors[:, 2] * canvas_x + voxel_coors[:, 3])
         # Scatter the blob back to the canvas
         canvas[indices.long()] = torch.arange(
             start=0, end=voxel_mean.size(0), device=voxel_mean.device)
 
         # Step 2: get voxel mean for each point
         voxel_index = (
-            pts_coors[:, 0] * canvas_z * canvas_y * canvas_x +
-            pts_coors[:, 1] * canvas_y * canvas_x +
-            pts_coors[:, 2] * canvas_x + pts_coors[:, 3])
+                pts_coors[:, 0] * canvas_z * canvas_y * canvas_x +
+                pts_coors[:, 1] * canvas_y * canvas_x +
+                pts_coors[:, 2] * canvas_x + pts_coors[:, 3])
         voxel_inds = canvas[voxel_index.long()]
         center_per_point = voxel_mean[voxel_inds, ...]
         return center_per_point
@@ -255,11 +255,11 @@ class DynamicVFE(nn.Module):
         if self._with_voxel_center:
             f_center = features.new_zeros(size=(features.size(0), 3))
             f_center[:, 0] = features[:, 0] - (
-                coors[:, 3].type_as(features) * self.vx + self.x_offset)
+                    coors[:, 3].type_as(features) * self.vx + self.x_offset)
             f_center[:, 1] = features[:, 1] - (
-                coors[:, 2].type_as(features) * self.vy + self.y_offset)
+                    coors[:, 2].type_as(features) * self.vy + self.y_offset)
             f_center[:, 2] = features[:, 2] - (
-                coors[:, 1].type_as(features) * self.vz + self.z_offset)
+                    coors[:, 1].type_as(features) * self.vz + self.z_offset)
             features_ls.append(f_center)
 
         if self._with_distance:
@@ -410,8 +410,8 @@ class HardVFE(nn.Module):
         # Find distance of x, y, and z from cluster center
         if self._with_cluster_center:
             points_mean = (
-                features[:, :, :3].sum(dim=1, keepdim=True) /
-                num_points.type_as(features).view(-1, 1, 1))
+                    features[:, :, :3].sum(dim=1, keepdim=True) /
+                    num_points.type_as(features).view(-1, 1, 1))
             # TODO: maybe also do cluster for reflectivity
             f_cluster = features[:, :, :3] - points_mean
             features_ls.append(f_cluster)
@@ -421,14 +421,14 @@ class HardVFE(nn.Module):
             f_center = features.new_zeros(
                 size=(features.size(0), features.size(1), 3))
             f_center[:, :, 0] = features[:, :, 0] - (
-                coors[:, 3].type_as(features).unsqueeze(1) * self.vx +
-                self.x_offset)
+                    coors[:, 3].type_as(features).unsqueeze(1) * self.vx +
+                    self.x_offset)
             f_center[:, :, 1] = features[:, :, 1] - (
-                coors[:, 2].type_as(features).unsqueeze(1) * self.vy +
-                self.y_offset)
+                    coors[:, 2].type_as(features).unsqueeze(1) * self.vy +
+                    self.y_offset)
             f_center[:, :, 2] = features[:, :, 2] - (
-                coors[:, 1].type_as(features).unsqueeze(1) * self.vz +
-                self.z_offset)
+                    coors[:, 1].type_as(features).unsqueeze(1) * self.vz +
+                    self.z_offset)
             features_ls.append(f_center)
 
         if self._with_distance:
@@ -487,3 +487,41 @@ class HardVFE(nn.Module):
         out = torch.max(voxel_canvas, dim=1)[0]
 
         return out
+
+
+@VOXEL_ENCODERS.register_module()
+class VoxelFeatureExtractorV3(nn.Module):
+    """
+    VISTA 中使用的体素特征提取模块
+    input:
+        features: 特征张量矩阵
+        num_voxels: 输入的体素数
+    """
+    def __init__(
+            self, num_input_features, norm_cfg=None, name="VoxelFeatureExtractorV3"
+    ):
+        super(VoxelFeatureExtractorV3, self).__init__()
+        self.name = name
+        print(name)
+        self.num_input_features = num_input_features
+
+    def forward(self, features, num_voxels, coors=None):
+        # print("=====  voxel_encoder_start  =====")
+        # print("features:", features.shape)
+        # print("num_voxels:", num_voxels.shape)
+        # print("=====  voxel_encoder_end  =====")
+        # type_as按照给定的tensor的类型转换类型
+        # view( )函数相当于numpy中的resize( )函数，都是用来重构(或者调整)张量维度的
+        # 首先对输入的features沿第1个维度进行求和操作,这里是行
+        # 随后再除总体素数目
+        # 结果为一个平均
+        points_mean = features[:, :, : self.num_input_features].sum(
+            dim=1, keepdim=False
+        ) / num_voxels.type_as(features).view(-1, 1)
+
+        return points_mean.contiguous()
+    def __repr__(self):
+        s = self.__class__.__name__ + '('
+        s += 'num_input_features=' + str(self.num_input_features)
+        s += ')'
+        return s

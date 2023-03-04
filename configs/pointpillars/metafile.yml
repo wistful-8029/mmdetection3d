@@ -44,7 +44,7 @@ Models:
 
   - Name: hv_pointpillars_secfpn_sbn-all_4x8_2x_nus-3d
     In Collection: PointPillars
-    Config: configs/pointpillars/hv_pointpillars_secfpn_sbn-all_4x8_2x_nus-3d.py
+    Config: configs/pointpillars/test_config.py
     Metadata:
       Training Data: nuScenes
       Training Memory (GB): 16.4

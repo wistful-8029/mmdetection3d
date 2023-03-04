@@ -1,5 +1,5 @@
 _base_ = [
-    '../_base_/datasets/nus-mono3d.py', '../_base_/models/fcos3d.py',
+    '../_base_/datasets/nus-mono3d-mini.py', '../_base_/models/fcos3d.py',
     '../_base_/schedules/mmdet_schedule_1x.py', '../_base_/default_runtime.py'
 ]
 # model settings
@@ -54,7 +54,7 @@ test_pipeline = [
         ])
 ]
 data = dict(
-    samples_per_gpu=2,
+    samples_per_gpu=4,
     workers_per_gpu=2,
     train=dict(pipeline=train_pipeline),
     val=dict(pipeline=test_pipeline),

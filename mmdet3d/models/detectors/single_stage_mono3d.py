@@ -57,7 +57,7 @@ class SingleStageMono3DDetector(SingleStageDetector):
                       gt_labels_3d,
                       centers2d,
                       depths,
-                      attr_labels=None,
+                      attr_labels,
                       gt_bboxes_ignore=None):
         """
         Args:

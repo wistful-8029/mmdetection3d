@@ -33,7 +33,34 @@ class VoxelNet(SingleStage3DDetector):
             test_cfg=test_cfg,
             init_cfg=init_cfg,
             pretrained=pretrained)
+        #voxel_layer的输出形状
+        """Convert kitti points(N, >=3) to voxels.
+
+                Args:
+                    points (torch.Tensor): [N, ndim]. Points[:, :3] contain xyz points
+                        and points[:, 3:] contain other information like reflectivity.
+                    voxel_size (tuple or float): The size of voxel with the shape of
+                        [3].
+                    coors_range (tuple or float): The coordinate range of voxel with
+                        the shape of [6].
+                    max_points (int, optional): maximum points contained in a voxel. if
+                        max_points=-1, it means using dynamic_voxelize. Default: 35.
+                    max_voxels (int, optional): maximum voxels this function create.
+                        for second, 20000 is a good choice. Users should shuffle points
+                        before call this function because max_voxels may drop points.
+                        Default: 20000.
+
+                Returns:
+                    voxels_out (torch.Tensor): Output voxels with the shape of [M,
+                        max_points, ndim]. Only contain points and returned when
+                        max_points != -1.
+                    coors_out (torch.Tensor): Output coordinates with the shape of
+                        [M, 3].
+                    num_points_per_voxel_out (torch.Tensor): Num points per voxel with
+                        the shape of [M]. Only returned when max_points != -1.
+                """
         self.voxel_layer = Voxelization(**voxel_layer)
+
         self.voxel_encoder = builder.build_voxel_encoder(voxel_encoder)
         self.middle_encoder = builder.build_middle_encoder(middle_encoder)
 

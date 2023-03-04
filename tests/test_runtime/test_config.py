@@ -90,7 +90,7 @@ def test_config_build_pipeline():
 
     # Other configs needs database sampler.
     config_names = [
-        'pointpillars/hv_pointpillars_secfpn_sbn-all_4x8_2x_nus-3d.py',
+        'pointpillars/test_config.py',
     ]
 
     print('Using {} config files'.format(len(config_names)))

@@ -39,7 +39,7 @@ class AnchorFreeMono3DHead(BaseMono3DDenseHead):
             classification. Defaults to 0.
         dir_limit_offset (float, optional): Parameter used in direction
             classification. Defaults to 0.
-        loss_cls (dict, optional): Config of classification loss.
+        loss_cls (dict, optional): Config of with loss.
         loss_bbox (dict, optional): Config of localization loss.
         loss_dir (dict, optional): Config of direction classifier loss.
         loss_attr (dict, optional): Config of attribute classifier loss,

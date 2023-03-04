@@ -436,8 +436,9 @@ class SMOKEMono3DHead(AnchorFreeMono3DHead):
              gt_labels_3d,
              centers2d,
              depths,
-             attr_labels,
+
              img_metas,
+             attr_labels=None,
              gt_bboxes_ignore=None):
         """Compute loss of the head.
 

@@ -18,11 +18,16 @@ from .smoke_mono3d import SMOKEMono3D
 from .ssd3dnet import SSD3DNet
 from .votenet import VoteNet
 from .voxelnet import VoxelNet
+from .my_single_stage import My_SingleStage3DDetector
+from .ohs import OHS_Multiview
+from .my_model import MY_MODEL
+from .my_img_model import MY_IMG_MODEL
 
 __all__ = [
     'Base3DDetector', 'VoxelNet', 'DynamicVoxelNet', 'MVXTwoStageDetector',
     'DynamicMVXFasterRCNN', 'MVXFasterRCNN', 'PartA2', 'VoteNet', 'H3DNet',
     'CenterPoint', 'SSD3DNet', 'ImVoteNet', 'SingleStageMono3DDetector',
     'FCOSMono3D', 'ImVoxelNet', 'GroupFree3DNet', 'PointRCNN', 'SMOKEMono3D',
-    'MinkSingleStage3DDetector', 'SASSD'
+    'MinkSingleStage3DDetector', 'SASSD', 'My_SingleStage3DDetector', 'OHS_Multiview',
+    'MY_MODEL', 'MY_IMG_MODEL'
 ]
