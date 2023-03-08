@@ -143,6 +143,7 @@ class NuScenesDataset(Custom3DDataset):
         from nuscenes.eval.detection.config import config_factory
         self.eval_detection_configs = config_factory(self.eval_version)
         if self.modality is None:
+            # 默认只用LiDAR
             self.modality = dict(
                 use_camera=False,
                 use_lidar=True,
@@ -162,6 +163,7 @@ class NuScenesDataset(Custom3DDataset):
                 contains such boxes, store a list containing idx,
                 otherwise, store empty list.
         """
+        print('get_cat_ids')
         info = self.data_infos[idx]
         if self.use_valid_flag:
             mask = info['valid_flag']
@@ -184,6 +186,7 @@ class NuScenesDataset(Custom3DDataset):
         Returns:
             list[dict]: List of annotations sorted by timestamps.
         """
+        print('load_annotations')
         data = mmcv.load(ann_file, file_format='pkl')
         data_infos = list(sorted(data['infos'], key=lambda e: e['timestamp']))
         data_infos = data_infos[::self.load_interval]
@@ -201,15 +204,16 @@ class NuScenesDataset(Custom3DDataset):
             dict: Data information that will be passed to the data
                 preprocessing pipelines. It includes the following keys:
 
-                - sample_idx (str): Sample index.
-                - pts_filename (str): Filename of point clouds.
-                - sweeps (list[dict]): Infos of sweeps.
-                - timestamp (float): Sample timestamp.
-                - img_filename (str, optional): Image filename.
-                - lidar2img (list[np.ndarray], optional): Transformations
+                - sample_idx (str): Sample index. 样本数据索引
+                - pts_filename (str): Filename of point clouds. 点云文件名称
+                - sweeps (list[dict]): Infos of sweeps. 扫描信息列表
+                - timestamp (float): Sample timestamp. 时间戳
+                - img_filename (str, optional): Image filename. 图像文件名
+                - lidar2img (list[np.ndarray], optional): Transformations # 从LiDAR到相机的变换矩阵
                     from lidar to different cameras.
-                - ann_info (dict): Annotation info.
+                - ann_info (dict): Annotation info. # 注释字典
         """
+        print('get_data_info')
         info = self.data_infos[index]
         # standard protocol modified from SECOND.Pytorch
         input_dict = dict(
@@ -218,7 +222,7 @@ class NuScenesDataset(Custom3DDataset):
             sweeps=info['sweeps'],
             timestamp=info['timestamp'] / 1e6,
         )
-
+        print("dsadsadas", self.modality['use_camera'])
         if self.modality['use_camera']:
             image_paths = []
             lidar2img_rts = []
@@ -227,7 +231,7 @@ class NuScenesDataset(Custom3DDataset):
                 # obtain lidar to image transformation matrix
                 lidar2cam_r = np.linalg.inv(cam_info['sensor2lidar_rotation'])
                 lidar2cam_t = cam_info[
-                    'sensor2lidar_translation'] @ lidar2cam_r.T
+                                  'sensor2lidar_translation'] @ lidar2cam_r.T
                 lidar2cam_rt = np.eye(4)
                 lidar2cam_rt[:3, :3] = lidar2cam_r.T
                 lidar2cam_rt[3, :3] = -lidar2cam_t
@@ -246,7 +250,7 @@ class NuScenesDataset(Custom3DDataset):
         if not self.test_mode:
             annos = self.get_ann_info(index)
             input_dict['ann_info'] = annos
-
+        # print(input_dict.keys())
         return input_dict
 
     def get_ann_info(self, index):
@@ -263,6 +267,7 @@ class NuScenesDataset(Custom3DDataset):
                 - gt_labels_3d (np.ndarray): Labels of ground truths.
                 - gt_names (list[str]): Class names of ground truths.
         """
+        print('get_ann_info')
         info = self.data_infos[index]
         # filter out bbox containing no points
         if self.use_valid_flag:
@@ -310,6 +315,7 @@ class NuScenesDataset(Custom3DDataset):
         Returns:
             str: Path of the output json file.
         """
+        print('_format_bbox')
         nusc_annos = {}
         mapped_class_names = self.CLASSES
 
@@ -324,13 +330,13 @@ class NuScenesDataset(Custom3DDataset):
                                              self.eval_version)
             for i, box in enumerate(boxes):
                 name = mapped_class_names[box.label]
-                if np.sqrt(box.velocity[0]**2 + box.velocity[1]**2) > 0.2:
+                if np.sqrt(box.velocity[0] ** 2 + box.velocity[1] ** 2) > 0.2:
                     if name in [
-                            'car',
-                            'construction_vehicle',
-                            'bus',
-                            'truck',
-                            'trailer',
+                        'car',
+                        'construction_vehicle',
+                        'bus',
+                        'truck',
+                        'trailer',
                     ]:
                         attr = 'vehicle.moving'
                     elif name in ['bicycle', 'motorcycle']:
@@ -386,6 +392,7 @@ class NuScenesDataset(Custom3DDataset):
         Returns:
             dict: Dictionary of evaluation details.
         """
+        print('_evaluate_single')
         from nuscenes import NuScenes
         from nuscenes.eval.detection.evaluate import NuScenesEval
 
@@ -444,7 +451,7 @@ class NuScenesDataset(Custom3DDataset):
         assert len(results) == len(self), (
             'The length of results is not equal to the dataset len: {} != {}'.
             format(len(results), len(self)))
-
+        print('format_results')
         if jsonfile_prefix is None:
             tmp_dir = tempfile.TemporaryDirectory()
             jsonfile_prefix = osp.join(tmp_dir.name, 'results')
@@ -500,6 +507,7 @@ class NuScenesDataset(Custom3DDataset):
         Returns:
             dict[str, float]: Results of each evaluation metric.
         """
+        print('evaluate')
         result_files, tmp_dir = self.format_results(results, jsonfile_prefix)
 
         if isinstance(result_files, dict):
@@ -520,6 +528,7 @@ class NuScenesDataset(Custom3DDataset):
 
     def _build_default_pipeline(self):
         """Build the default pipeline for this dataset."""
+        print('_build_default_pipeline')
         pipeline = [
             dict(
                 type='LoadPointsFromFile',
@@ -550,6 +559,7 @@ class NuScenesDataset(Custom3DDataset):
             pipeline (list[dict], optional): raw data loading for showing.
                 Default: None.
         """
+        print('show')
         assert out_dir is not None, 'Expect out_dir, got none.'
         pipeline = self._get_pipeline(pipeline)
         for i, result in enumerate(results):

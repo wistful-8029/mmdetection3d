@@ -7,11 +7,13 @@ from mmdet.datasets.pipelines import LoadAnnotations, LoadImageFromFile
 from ..builder import PIPELINES
 
 
+
 @PIPELINES.register_module()
 class LoadMultiViewImageFromFiles(object):
     """Load multi channel images from a list of separate channel files.
 
-    Expects results['img_filename'] to be a list of filenames.
+
+    Expects results['img_filename'] to be a list of filenames. 结果是一个文件名列表
 
     Args:
         to_float32 (bool, optional): Whether to convert the img to float32.

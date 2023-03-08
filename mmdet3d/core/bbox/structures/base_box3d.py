@@ -36,7 +36,8 @@ class BaseInstance3DBoxes(object):
             boxes.
     """
 
-    def __init__(self, tensor, box_dim=7, with_yaw=True, origin=(0.5, 0.5, 0)):
+    def __init__(self, tensor, box_dim=7, with_yaw=True, origin=(0.5, 0.5, 0)): \
+            # 注意传入的 tensor 形状为 N X 7，表示场景中 N 个物体 3D 框
         if isinstance(tensor, torch.Tensor):
             device = tensor.device
         else:
@@ -61,6 +62,7 @@ class BaseInstance3DBoxes(object):
             self.box_dim = box_dim
             self.with_yaw = with_yaw
         self.tensor = tensor.clone()
+        # 如果传入的tensor中的 x,y,z 不是底部中心点，会转换为底部中心
 
         if origin != (0.5, 0.5, 0):
             dst = self.tensor.new_tensor((0.5, 0.5, 0))

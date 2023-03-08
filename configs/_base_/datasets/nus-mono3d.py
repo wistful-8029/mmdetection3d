@@ -1,5 +1,5 @@
 dataset_type = 'NuScenesMonoDataset'
-data_root = 'data/nuscenes/'
+data_root = '/home/wistful/work/mmdetection3d/data/nuscenes/'
 class_names = [
     'car', 'truck', 'trailer', 'bus', 'construction_vehicle', 'bicycle',
     'motorcycle', 'pedestrian', 'traffic_cone', 'barrier'
