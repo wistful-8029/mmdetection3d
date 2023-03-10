@@ -229,14 +229,14 @@ def show_multi_modality_result(img,
                                gt_bbox_color=(61, 102, 255),
                                pred_bbox_color=(241, 101, 72)):
     """Convert multi-modality detection results into 2D results.
-
+    将3D边框投影到2D图像平面并且可视化
     Project the predicted 3D bbox to 2D image plane and visualize them.
 
     Args:
         img (np.ndarray): The numpy array of image in cv2 fashion.
         gt_bboxes (:obj:`BaseInstance3DBoxes`): Ground truth boxes.
         pred_bboxes (:obj:`BaseInstance3DBoxes`): Predicted boxes.
-        proj_mat (numpy.array, shape=[4, 4]): The projection matrix
+        proj_mat (numpy.array, shape=[4, 4]): The projection matrix # 投影矩阵
             according to the camera intrinsic parameters.
         out_dir (str): Path of output directory.
         filename (str): Filename of the current frame.
@@ -251,6 +251,7 @@ def show_multi_modality_result(img,
         pred_bbox_color (str or tuple(int), optional): Color of bbox lines.
            The tuple of color should be in BGR order. Default: (72, 101, 241).
     """
+    # 根据传入3D框所处的坐标系调用对应的投影方法，获取投影框
     if box_mode == 'depth':
         draw_bbox = draw_depth_bbox3d_on_img
     elif box_mode == 'lidar':
@@ -278,6 +279,7 @@ def show_multi_modality_result(img,
         mmcv.imshow(show_img, win_name='project_bbox3d_img', wait_time=0)
 
     if img is not None:
+        # print('写入原图像')
         mmcv.imwrite(img, osp.join(result_path, f'{filename}_img.png'))
 
     if gt_bboxes is not None:
@@ -289,3 +291,10 @@ def show_multi_modality_result(img,
         pred_img = draw_bbox(
             pred_bboxes, img, proj_mat, img_metas, color=pred_bbox_color)
         mmcv.imwrite(pred_img, osp.join(result_path, f'{filename}_pred.png'))
+
+    if pred_bboxes is not None and gt_bboxes is not None:
+        gt_img = draw_bbox(
+            gt_bboxes, img, proj_mat, img_metas, color=gt_bbox_color)
+        gt_and_pred_img = draw_bbox(
+            pred_bboxes, gt_img, proj_mat, img_metas, color=pred_bbox_color)
+        mmcv.imwrite(gt_and_pred_img, osp.join(result_path, f'{filename}_pred_gt.png'))

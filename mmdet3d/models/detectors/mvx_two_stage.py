@@ -168,31 +168,34 @@ class MVXTwoStageDetector(Base3DDetector):
         return hasattr(self,
                        'middle_encoder') and self.middle_encoder is not None
 
+    # 图像特征提取
     def extract_img_feat(self, img, img_metas):
         """Extract features of images."""
         if self.with_img_backbone and img is not None:
-            input_shape = img.shape[-2:]
+            input_shape = img.shape[-2:]  # 获取图片的尺寸
             # update real input shape of each single img
             for img_meta in img_metas:
-                img_meta.update(input_shape=input_shape)
+                img_meta.update(input_shape=input_shape)  # 更新一下img_metas
 
-            if img.dim() == 5 and img.size(0) == 1:
+            if img.dim() == 5 and img.size(0) == 1:  # 维度等于5的话去除一个维度（只取一个图片）
                 img.squeeze_()
-            elif img.dim() == 5 and img.size(0) > 1:
+            elif img.dim() == 5 and img.size(0) > 1:  # 取出批量、图片个数、通道、高、宽
                 B, N, C, H, W = img.size()
-                img = img.view(B * N, C, H, W)
-            img_feats = self.img_backbone(img)
+                img = img.view(B * N, C, H, W)  # 重构为 [批量*数量, 通道, 高, 宽]
+            img_feats = self.img_backbone(img)  # 送入骨干
         else:
             return None
         if self.with_img_neck:
-            img_feats = self.img_neck(img_feats)
+            img_feats = self.img_neck(img_feats)  # 将骨干再送入neck
         return img_feats
 
+    # 点云特征提取
     def extract_pts_feat(self, pts, img_feats, img_metas):
         """Extract features of points."""
         if not self.with_pts_bbox:
             return None
-        voxels, num_points, coors = self.voxelize(pts)
+        voxels, num_points, coors = self.voxelize(pts)  # 体素化
+        # 体素编码器
         voxel_features = self.pts_voxel_encoder(voxels, num_points, coors,
                                                 img_feats, img_metas)
         batch_size = coors[-1, 0] + 1
@@ -202,12 +205,16 @@ class MVXTwoStageDetector(Base3DDetector):
             x = self.pts_neck(x)
         return x
 
+    # 图像和点云特征提取
     def extract_feat(self, points, img, img_metas):
         """Extract features from images and points."""
+        # 以上两个方法的综合
         img_feats = self.extract_img_feat(img, img_metas)
         pts_feats = self.extract_pts_feat(points, img_feats, img_metas)
+        # 返回一个元组
         return (img_feats, pts_feats)
 
+    # 体素化点云
     @torch.no_grad()
     @force_fp32()
     def voxelize(self, points):
@@ -235,6 +242,7 @@ class MVXTwoStageDetector(Base3DDetector):
         coors_batch = torch.cat(coors_batch, dim=0)
         return voxels, num_points, coors_batch
 
+    # 总体前向训练
     def forward_train(self,
                       points=None,
                       img_metas=None,
@@ -289,6 +297,7 @@ class MVXTwoStageDetector(Base3DDetector):
             losses.update(losses_img)
         return losses
 
+    # 点云前向训练
     def forward_pts_train(self,
                           pts_feats,
                           gt_bboxes_3d,
@@ -316,6 +325,7 @@ class MVXTwoStageDetector(Base3DDetector):
             *loss_inputs, gt_bboxes_ignore=gt_bboxes_ignore)
         return losses
 
+    # 图像前向训练
     def forward_img_train(self,
                           x,
                           img_metas,
@@ -370,6 +380,7 @@ class MVXTwoStageDetector(Base3DDetector):
 
         return losses
 
+    # 无数据增强测试图像
     def simple_test_img(self, x, img_metas, proposals=None, rescale=False):
         """Test without augmentation."""
         if proposals is None:
@@ -381,6 +392,7 @@ class MVXTwoStageDetector(Base3DDetector):
         return self.img_roi_head.simple_test(
             x, proposal_list, img_metas, rescale=rescale)
 
+    # 无数据增强测试rpn
     def simple_test_rpn(self, x, img_metas, rpn_test_cfg):
         """RPN test function."""
         rpn_outs = self.img_rpn_head(x)
@@ -388,6 +400,7 @@ class MVXTwoStageDetector(Base3DDetector):
         proposal_list = self.img_rpn_head.get_bboxes(*proposal_inputs)
         return proposal_list
 
+    # 无数据增强测试点云
     def simple_test_pts(self, x, img_metas, rescale=False):
         """Test function of point cloud branch."""
         outs = self.pts_bbox_head(x)
@@ -417,6 +430,7 @@ class MVXTwoStageDetector(Base3DDetector):
                 result_dict['img_bbox'] = img_bbox
         return bbox_list
 
+    # 数据增强测试
     def aug_test(self, points, img_metas, imgs=None, rescale=False):
         """Test function with augmentaiton."""
         img_feats, pts_feats = self.extract_feats(points, img_metas, imgs)
@@ -429,6 +443,7 @@ class MVXTwoStageDetector(Base3DDetector):
 
     def extract_feats(self, points, img_metas, imgs=None):
         """Extract point and image features of multiple samples."""
+        # 提取多个样本的点云和图像特征
         if imgs is None:
             imgs = [None] * len(img_metas)
         img_feats, pts_feats = multi_apply(self.extract_feat, points, imgs,

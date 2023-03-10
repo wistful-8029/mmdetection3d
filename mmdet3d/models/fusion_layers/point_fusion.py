@@ -297,7 +297,9 @@ class PointFusion(BaseModule):
             img_scale_factor=img_scale_factor,
             img_crop_offset=img_crop_offset,
             img_flip=img_flip,
-            img_pad_shape=img_meta['input_shape'][:2],
+            # 这里原版是input_shape，但是会报错key error，img_meta里面没有这个字段
+            #img_pad_shape=img_meta['input_shape'][:2],
+            img_pad_shape=img_meta['img_shape'][:2],
             img_shape=img_meta['img_shape'][:2],
             aligned=self.aligned,
             padding_mode=self.padding_mode,

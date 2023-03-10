@@ -65,6 +65,7 @@ class Box3DMode(IntEnum):
     @staticmethod
     def convert(box, src, dst, rt_mat=None, with_yaw=True):
         """Convert boxes from `src` mode to `dst` mode.
+        实现坐标系的自由转换
 
         Args:
             box (tuple | list | np.ndarray |
@@ -114,6 +115,7 @@ class Box3DMode(IntEnum):
         x_size, y_size, z_size = arr[..., 3:4], arr[..., 4:5], arr[..., 5:6]
         if with_yaw:
             yaw = arr[..., 6:7]
+        # LiDAR坐标系 -> 相机坐标系
         if src == Box3DMode.LIDAR and dst == Box3DMode.CAM:
             if rt_mat is None:
                 rt_mat = arr.new_tensor([[0, -1, 0], [0, 0, -1], [1, 0, 0]])
@@ -121,6 +123,7 @@ class Box3DMode(IntEnum):
             if with_yaw:
                 yaw = -yaw - np.pi / 2
                 yaw = limit_period(yaw, period=np.pi * 2)
+        # 相机坐标系 -> LiDAR坐标系
         elif src == Box3DMode.CAM and dst == Box3DMode.LIDAR:
             if rt_mat is None:
                 rt_mat = arr.new_tensor([[0, 0, 1], [-1, 0, 0], [0, -1, 0]])
